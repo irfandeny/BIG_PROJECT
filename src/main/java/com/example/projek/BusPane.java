@@ -1,20 +1,22 @@
 package com.example.projek;
 
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
 import java.awt.*;
 import java.awt.print.*;
-import javafx.scene.control.Alert.AlertType;
-import javafx.stage.Stage;
 import java.util.ArrayList;
 
-public class BusPane extends GridPane {
+public class BusPane extends StackPane {
     private final ComboBox<String> busComboBox;
     private final TextField namaField;
     private final ComboBox<String> kelasComboBox;
@@ -22,17 +24,30 @@ public class BusPane extends GridPane {
     private final Label totalHargaLabel;
     private final SistemPemesananBus sistemPemesananBus;
 
+    private final double PREF_WIDTH = 650;  // Ganti dengan lebar gambar
+    private final double PREF_HEIGHT = 700;
+
+    private double selectionPaneWidth;
+    private double selectionPaneHeight;
+
     public BusPane() {
         sistemPemesananBus = new SistemPemesananBus();
         initTransportasiData();
 
-        setPadding(new Insets(10, 10, 10, 10));
-        setVgap(10);
-        setHgap(10);
-        setAlignment(Pos.CENTER);
+        // Load background image
+        Image backgroundImage = new Image(getClass().getResource("/images/bus_background.jpg").toExternalForm());
+        ImageView backgroundImageView = new ImageView(backgroundImage);
+        backgroundImageView.setFitWidth(PREF_WIDTH);
+        backgroundImageView.setFitHeight(PREF_HEIGHT);
+
+        GridPane gridPane = new GridPane();
+        gridPane.setPadding(new Insets(10, 10, 10, 10));
+        gridPane.setVgap(10);
+        gridPane.setHgap(10);
+        gridPane.setAlignment(Pos.CENTER);
 
         Label transportasiLabel = new Label("Pilih Transportasi:");
-        transportasiLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
+        transportasiLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #F0FFFF; -fx-font-weight: bold;");
         busComboBox = new ComboBox<>();
         for (Bus bus : sistemPemesananBus.getBusList()) {
             busComboBox.getItems().add(bus.toString());
@@ -41,12 +56,12 @@ public class BusPane extends GridPane {
         busComboBox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5;");
 
         Label namaLabel = new Label("Nama Penumpang:");
-        namaLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
+        namaLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #F0FFFF; -fx-font-weight: bold;");
         namaField = new TextField();
         namaField.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5;-fx-font-weight: bold;");
 
         Label kelasLabel = new Label("Pilih Kelas:");
-        kelasLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
+        kelasLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #F0FFFF; -fx-font-weight: bold;");
         kelasComboBox = new ComboBox<>();
         kelasComboBox.getItems().addAll("Ekonomi", "Bisnis");
         kelasComboBox.getSelectionModel().selectFirst();
@@ -61,10 +76,11 @@ public class BusPane extends GridPane {
         cetakButton.setOnAction(e -> cetakTiket());
 
         Label listLabel = new Label("Tiket yang dipesan:");
-        listLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
+        listLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #F0FFFF; -fx-font-weight: bold;");
 
         tiketListView = new ListView<>();
         tiketListView.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc;");
+        tiketListView.setOpacity(0.9);
 
         totalHargaLabel = new Label("Total Harga: Rp0");
         totalHargaLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #B22222;");
@@ -73,30 +89,37 @@ public class BusPane extends GridPane {
         backButton.setStyle("-fx-background-color: #DC143C; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10;");
         backButton.setOnAction(e -> {
             SelectionPane selectionPane = new SelectionPane();
-            Scene scene = new Scene(selectionPane, 400, 200);
+
+            // Buat Scene baru dengan ukuran yang sudah disimpan sebelumnya
+            Scene scene = new Scene(selectionPane, selectionPaneWidth, selectionPaneHeight);
             Stage stage = (Stage) getScene().getWindow();
             stage.setScene(scene);
             stage.setTitle("Pilih Jenis Tiket");
         });
 
-        add(transportasiLabel, 0, 0);
-        add(busComboBox, 1, 0);
-        add(namaLabel, 0, 1);
-        add(namaField, 1, 1);
-        add(kelasLabel, 0, 2);
-        add(kelasComboBox, 1, 2);
-        add(pesanButton, 1, 3);
-        add(cetakButton, 1, 4);
-        add(listLabel, 0, 5);
-        add(tiketListView, 1, 5);
-        add(totalHargaLabel, 1, 6);
-        add(backButton,1,7);
+        gridPane.add(transportasiLabel, 0, 0);
+        gridPane.add(busComboBox, 1, 0);
+        gridPane.add(namaLabel, 0, 1);
+        gridPane.add(namaField, 1, 1);
+        gridPane.add(kelasLabel, 0, 2);
+        gridPane.add(kelasComboBox, 1, 2);
+        gridPane.add(pesanButton, 1, 3);
+        gridPane.add(cetakButton, 1, 4);
+        gridPane.add(listLabel, 0, 5);
+        gridPane.add(tiketListView, 1, 5);
+        gridPane.add(totalHargaLabel, 1, 6);
+        gridPane.add(backButton, 1, 7);
+
+        getChildren().addAll(backgroundImageView, gridPane);
+        setPrefSize(PREF_WIDTH, PREF_HEIGHT);
     }
 
     private void initTransportasiData() {
         sistemPemesananBus.tambahBus(new Bus("BUS MALAM JAYA", "Jakarta", "Surabaya", "20:00", "06:00", 250000, 350000));
         sistemPemesananBus.tambahBus(new Bus("BUS SINAR JAYA", "Jakarta", "Bandung", "08:00", "12:00", 100000, 150000));
         sistemPemesananBus.tambahBus(new Bus("BUS MURNI JAYA", "Surabaya", "Yogyakarta", "09:00", "17:00", 150000, 250000));
+        selectionPaneWidth = 500;
+        selectionPaneHeight = 700;
     }
 
     private void pesanTiket() {
@@ -217,7 +240,7 @@ public class BusPane extends GridPane {
         }
     }
     private void showErrorMessage(String message) {
-        Alert alert = new Alert(AlertType.ERROR);
+        Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Kesalahan");
         alert.setHeaderText(null);
         alert.setContentText(message);
