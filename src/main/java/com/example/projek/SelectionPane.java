@@ -3,10 +3,19 @@ package com.example.projek;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.GridPane;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
+
+import java.util.Objects;
 
 public class SelectionPane extends GridPane {
 
@@ -48,7 +57,7 @@ public class SelectionPane extends GridPane {
     private void showBusPane() {
         BusPane busPane = new BusPane();
         Scene scene = new Scene(busPane, 670, 400);
-        busPane.setStyle("-fx-background-color: #90EE90;");
+        setBackground(busPane, "/com/example/projek/bus_background.jpg");
         Stage stage = (Stage) getScene().getWindow();
         stage.setScene(scene);
         stage.setTitle("Sistem Pemesanan Tiket Bus");
@@ -57,7 +66,7 @@ public class SelectionPane extends GridPane {
     private void showTrainPane() {
         KeretaPane trainPane = new KeretaPane();
         Scene scene = new Scene(trainPane, 670, 400);
-        trainPane.setStyle("-fx-background-color: #4169E1;");
+        setBackground(trainPane, "/com/example/projek/train_background.jpg");
         Stage stage = (Stage) getScene().getWindow();
         stage.setScene(scene);
         stage.setTitle("Sistem Pemesanan Tiket Kereta");
@@ -66,9 +75,22 @@ public class SelectionPane extends GridPane {
     private void showPlanePane() {
         PesawatPane pesawatPane = new PesawatPane();
         Scene scene = new Scene(pesawatPane, 670, 400);
-        pesawatPane.setStyle("-fx-background-color: #E9967A;");
+        setBackground(pesawatPane, "/com/example/projek/plane_background.jpg");
         Stage stage = (Stage) getScene().getWindow();
         stage.setScene(scene);
         stage.setTitle("Sistem Pemesanan Tiket Pesawat");
+    }
+
+    private void setBackground(GridPane pane, String imagePath) {
+        Image image = new Image(Objects.requireNonNull(getClass().getResourceAsStream(imagePath)));
+        BackgroundSize backgroundSize = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true);
+        BackgroundImage backgroundImage = new BackgroundImage(
+                image,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundPosition.CENTER,
+                backgroundSize);
+        Background background = new Background(backgroundImage);
+        pane.setBackground(background);
     }
 }

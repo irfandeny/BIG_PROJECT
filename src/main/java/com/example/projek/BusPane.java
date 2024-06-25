@@ -32,7 +32,7 @@ public class BusPane extends GridPane {
         setAlignment(Pos.CENTER);
 
         Label transportasiLabel = new Label("Pilih Transportasi:");
-        transportasiLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333;");
+        transportasiLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
         busComboBox = new ComboBox<>();
         for (Bus bus : sistemPemesananBus.getBusList()) {
             busComboBox.getItems().add(bus.toString());
@@ -41,16 +41,16 @@ public class BusPane extends GridPane {
         busComboBox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5;");
 
         Label namaLabel = new Label("Nama Penumpang:");
-        namaLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333;");
+        namaLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
         namaField = new TextField();
-        namaField.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5;");
+        namaField.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5;-fx-font-weight: bold;");
 
         Label kelasLabel = new Label("Pilih Kelas:");
-        kelasLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333;");
+        kelasLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
         kelasComboBox = new ComboBox<>();
         kelasComboBox.getItems().addAll("Ekonomi", "Bisnis");
         kelasComboBox.getSelectionModel().selectFirst();
-        kelasComboBox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5;");
+        kelasComboBox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5; -fx-font-weight: bold;");
 
         Button pesanButton = new Button("Pesan Tiket");
         pesanButton.setStyle("-fx-background-color: #4682b4; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10;");
@@ -59,6 +59,9 @@ public class BusPane extends GridPane {
         Button cetakButton = new Button("Cetak Tiket");
         cetakButton.setStyle("-fx-background-color: #4682b4; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10;");
         cetakButton.setOnAction(e -> cetakTiket());
+
+        Label listLabel = new Label("Tiket yang dipesan:");
+        listLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
 
         tiketListView = new ListView<>();
         tiketListView.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc;");
@@ -84,7 +87,7 @@ public class BusPane extends GridPane {
         add(kelasComboBox, 1, 2);
         add(pesanButton, 1, 3);
         add(cetakButton, 1, 4);
-        add(new Label("Tiket yang Dipesan:"), 0, 5);
+        add(listLabel, 0, 5);
         add(tiketListView, 1, 5);
         add(totalHargaLabel, 1, 6);
         add(backButton,1,7);
