@@ -66,7 +66,7 @@ public class SelectionPane extends GridPane {
     private void showPlanePane() {
         PesawatPane pesawatPane = new PesawatPane();
         Scene scene = new Scene(pesawatPane, 670, 400);
-        pesawatPane.setStyle("-fx-background-color: #CD5C5C;");
+        pesawatPane.setStyle("-fx-background-color: #E9967A;");
         Stage stage = (Stage) getScene().getWindow();
         stage.setScene(scene);
         stage.setTitle("Sistem Pemesanan Tiket Pesawat");
