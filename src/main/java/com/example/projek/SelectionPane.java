@@ -7,21 +7,20 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-public class SelectionPane extends StackPane {
-    private final double PREF_WIDTH = 500;  // Ganti dengan lebar gambar
-    private final double PREF_HEIGHT = 700; // Ganti dengan tinggi gambar
+public class SelectionPane extends AnchorPane {
 
     public SelectionPane() {
-        // Load background image
         Image backgroundImage = new Image("https://www.pixelstalk.net/wp-content/uploads/2016/08/Deadpool-Iphone-HD-Background.jpg");
         ImageView backgroundImageView = new ImageView(backgroundImage);
+        double PREF_WIDTH = 500;
         backgroundImageView.setFitWidth(PREF_WIDTH);
+        double PREF_HEIGHT = 700;
         backgroundImageView.setFitHeight(PREF_HEIGHT);
 
-        // Create UI elements
         Label selectionLabel = new Label("Pilih Jenis Tiket");
         selectionLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: white; -fx-font-weight: bold;");
 
@@ -41,7 +40,6 @@ public class SelectionPane extends StackPane {
         exitButton.setStyle("-fx-background-color: #DC143C; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10;");
         exitButton.setOnAction(e -> System.exit(0));
 
-        // Create layout
         StackPane layout = new StackPane();
         layout.getChildren().addAll(backgroundImageView, selectionLabel, busButton, trainButton, planeButton, exitButton);
         StackPane.setAlignment(selectionLabel, Pos.TOP_CENTER);
@@ -56,6 +54,11 @@ public class SelectionPane extends StackPane {
 
         getChildren().add(layout);
         setPrefSize(PREF_WIDTH, PREF_HEIGHT);
+
+        AnchorPane.setTopAnchor(backgroundImageView, 0.0);
+        AnchorPane.setBottomAnchor(backgroundImageView, 0.0);
+        AnchorPane.setLeftAnchor(backgroundImageView, 0.0);
+        AnchorPane.setRightAnchor(backgroundImageView, 0.0);
     }
 
     private void showBusPane() {

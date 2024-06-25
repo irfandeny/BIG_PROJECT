@@ -1,6 +1,5 @@
 package com.example.projek;
 
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -15,6 +14,7 @@ import javafx.stage.Stage;
 import java.awt.*;
 import java.awt.print.*;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class KeretaPane extends StackPane {
     private final ComboBox<String> keretaComboBox;
@@ -24,9 +24,6 @@ public class KeretaPane extends StackPane {
     private final Label totalHargaLabel;
     private final SistemPemesananKereta sistemPemesananKereta;
 
-    private final double PREF_WIDTH = 650;  // Ganti dengan lebar gambar
-    private final double PREF_HEIGHT = 700; // Ganti dengan tinggi gambar
-
     private double selectionPaneWidth;
     private double selectionPaneHeight;
 
@@ -34,10 +31,11 @@ public class KeretaPane extends StackPane {
         sistemPemesananKereta = new SistemPemesananKereta();
         initKeretaData();
 
-        // Load background image
-        Image backgroundImage = new Image(getClass().getResource("/images/train_background.jpg").toExternalForm());
+        Image backgroundImage = new Image(Objects.requireNonNull(getClass().getResource("/images/train_background.jpg")).toExternalForm());
         ImageView backgroundImageView = new ImageView(backgroundImage);
+        double PREF_WIDTH = 650;
         backgroundImageView.setFitWidth(PREF_WIDTH);
+        double PREF_HEIGHT = 700;
         backgroundImageView.setFitHeight(PREF_HEIGHT);
 
         GridPane gridPane = new GridPane();
@@ -89,8 +87,6 @@ public class KeretaPane extends StackPane {
         backButton.setStyle("-fx-background-color: #DC143C; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10;");
         backButton.setOnAction(e -> {
             SelectionPane selectionPane = new SelectionPane();
-
-            // Buat Scene baru dengan ukuran yang sudah disimpan sebelumnya
             Scene scene = new Scene(selectionPane, selectionPaneWidth, selectionPaneHeight);
             Stage stage = (Stage) getScene().getWindow();
             stage.setScene(scene);
@@ -175,13 +171,18 @@ public class KeretaPane extends StackPane {
                 g2d.drawRect(x, y, tiketWidth, totalHeight);
                 y += cellHeight;
 
-                String header = "=== Tiket Kereta ===";
-                g2d.setFont(new Font("Arial", Font.BOLD, 16));
-                g2d.drawString(header, x + (tiketWidth - g2d.getFontMetrics().stringWidth(header)) / 2, y);
+                String header = "=== Tiket Bus ===";
+                g2d.setFont(new Font("Arial", Font.BOLD, 14));
+                int headerWidth = g2d.getFontMetrics().stringWidth(header);
+                g2d.drawString(header, x + (tiketWidth - headerWidth) / 2, y - 5);
+
                 y += cellHeight;
+                g2d.drawLine(x, y, x + tiketWidth, y);
+                y += cellHeight / 2;
+                g2d.setFont(new Font("Arial", Font.PLAIN, 12));
 
                 TiketKereta selectedTicket = sistemPemesananKereta.getTiketKeretaList().stream()
-                        .filter(tiket -> tiket.toString().equals(selectedTiket))
+                        .filter(t -> t.toString().equals(selectedTiket))
                         .findFirst()
                         .orElse(null);
 
@@ -189,7 +190,7 @@ public class KeretaPane extends StackPane {
                     int labelX = x + 10;
                     int valueX = labelX + labelWidth + columnGap;
 
-                    String[] labels = {"Nama Kereta", "Nama Penumpang", "Asal", "Tujuan", "Berangkat", "Tiba", "Kelas", "Harga"};
+                    String[] labels = {"Nama Bus", "Nama Penumpang", "Asal", "Tujuan", "Berangkat", "Tiba", "Kelas", "Harga"};
                     String[] values = {
                             selectedTicket.kereta().namaKereta(),
                             selectedTicket.namaPenumpang(),
@@ -202,7 +203,7 @@ public class KeretaPane extends StackPane {
                     };
 
                     for (int i = 0; i < labels.length; i++) {
-                        g2d.setColor(new Color(131, 154, 244));
+                        g2d.setColor(new Color(131, 170, 126));
                         int y1 = y + (i * cellHeight) - cellHeight / 2;
                         g2d.fillRect(x, y1, tiketWidth, cellHeight);
                         g2d.setFont(new Font("Arial", Font.BOLD, 12));

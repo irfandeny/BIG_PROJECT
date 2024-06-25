@@ -1,6 +1,5 @@
 package com.example.projek;
 
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -15,6 +14,7 @@ import javafx.stage.Stage;
 import java.awt.*;
 import java.awt.print.*;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class BusPane extends StackPane {
     private final ComboBox<String> busComboBox;
@@ -24,9 +24,6 @@ public class BusPane extends StackPane {
     private final Label totalHargaLabel;
     private final SistemPemesananBus sistemPemesananBus;
 
-    private final double PREF_WIDTH = 650;  // Ganti dengan lebar gambar
-    private final double PREF_HEIGHT = 700;
-
     private double selectionPaneWidth;
     private double selectionPaneHeight;
 
@@ -34,10 +31,11 @@ public class BusPane extends StackPane {
         sistemPemesananBus = new SistemPemesananBus();
         initTransportasiData();
 
-        // Load background image
-        Image backgroundImage = new Image(getClass().getResource("/images/bus_background.jpg").toExternalForm());
+        Image backgroundImage = new Image(Objects.requireNonNull(getClass().getResource("/images/bus_background.jpg")).toExternalForm());
         ImageView backgroundImageView = new ImageView(backgroundImage);
+        double PREF_WIDTH = 650;
         backgroundImageView.setFitWidth(PREF_WIDTH);
+        double PREF_HEIGHT = 700;
         backgroundImageView.setFitHeight(PREF_HEIGHT);
 
         GridPane gridPane = new GridPane();
@@ -89,8 +87,6 @@ public class BusPane extends StackPane {
         backButton.setStyle("-fx-background-color: #DC143C; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10;");
         backButton.setOnAction(e -> {
             SelectionPane selectionPane = new SelectionPane();
-
-            // Buat Scene baru dengan ukuran yang sudah disimpan sebelumnya
             Scene scene = new Scene(selectionPane, selectionPaneWidth, selectionPaneHeight);
             Stage stage = (Stage) getScene().getWindow();
             stage.setScene(scene);

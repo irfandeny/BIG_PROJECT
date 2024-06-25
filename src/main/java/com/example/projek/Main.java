@@ -3,6 +3,7 @@ package com.example.projek;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class Main extends Application {
     public void start(Stage primaryStage) {
@@ -11,6 +12,8 @@ public class Main extends Application {
 
         primaryStage.setTitle("Sistem Pemesanan Tiket Transportasi");
         primaryStage.setScene(scene);
+        primaryStage.setResizable(false);
+        primaryStage.initStyle(StageStyle.DECORATED);
         primaryStage.show();
     }
 

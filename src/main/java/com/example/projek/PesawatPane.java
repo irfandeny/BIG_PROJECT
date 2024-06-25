@@ -1,6 +1,5 @@
 package com.example.projek;
 
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -15,17 +14,15 @@ import javafx.stage.Stage;
 import java.awt.*;
 import java.awt.print.*;
 import java.util.ArrayList;
+import java.util.Objects;
 
-    public class PesawatPane extends StackPane {
+public class PesawatPane extends StackPane {
         private final ComboBox<String> penerbanganComboBox;
         private final TextField namaField;
         private final ComboBox<String> kelasComboBox;
         private final ListView<String> tiketListView;
         private final Label totalHargaLabel;
         private final SistemPemesanan sistemPemesanan;
-
-        private final double PREF_WIDTH = 650;  // Ganti dengan lebar gambar
-        private final double PREF_HEIGHT = 700;
 
         private double selectionPaneWidth;
         private double selectionPaneHeight;
@@ -34,10 +31,11 @@ import java.util.ArrayList;
             sistemPemesanan = new SistemPemesanan();
             initPenerbanganData();
 
-            // Load background image
-            Image backgroundImage = new Image(getClass().getResource("/images/plane_background.jpg").toExternalForm());
+            Image backgroundImage = new Image(Objects.requireNonNull(getClass().getResource("/images/plane_background.jpg")).toExternalForm());
             ImageView backgroundImageView = new ImageView(backgroundImage);
+            double PREF_WIDTH = 650;
             backgroundImageView.setFitWidth(PREF_WIDTH);
+            double PREF_HEIGHT = 700;
             backgroundImageView.setFitHeight(PREF_HEIGHT);
 
             GridPane gridPane = new GridPane();
