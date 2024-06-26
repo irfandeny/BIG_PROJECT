@@ -12,11 +12,22 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.awt.print.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Objects;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.control.DatePicker;
+
+import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.PrintRequestAttributeSet;
+import javax.print.attribute.standard.MediaPrintableArea;
+
 
 public class KeretaPane extends StackPane {
+    private final DatePicker datePicker;
     private final ComboBox<String> keretaComboBox;
     private final TextField namaField;
     private final ComboBox<String> kelasComboBox;
@@ -65,6 +76,31 @@ public class KeretaPane extends StackPane {
         kelasComboBox.getSelectionModel().selectFirst();
         kelasComboBox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5; -fx-font-weight: bold;");
 
+        Label tanggalLabel = new Label("Tanggal Keberangkatan:");
+        tanggalLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
+
+        datePicker = new DatePicker();
+        datePicker.setConverter(new javafx.util.StringConverter<>() {
+            final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy");
+
+            @Override
+            public String toString(java.time.LocalDate date) {
+                if (date != null) {
+                    return dateFormatter.format(date);
+                } else {
+                    return "";
+                }
+            }
+
+            @Override
+            public java.time.LocalDate fromString(String string) {
+                if (string != null && !string.isEmpty()) {
+                    return java.time.LocalDate.parse(string, dateFormatter);
+                } else {
+                    return null;
+                }
+            }
+        });
         Button pesanButton = new Button("Pesan Tiket");
         pesanButton.setStyle("-fx-background-color: #4682b4; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10;");
         pesanButton.setOnAction(e -> pesanTiket());
@@ -99,37 +135,48 @@ public class KeretaPane extends StackPane {
         gridPane.add(namaField, 1, 1);
         gridPane.add(kelasLabel, 0, 2);
         gridPane.add(kelasComboBox, 1, 2);
-        gridPane.add(pesanButton, 1, 3);
-        gridPane.add(cetakButton, 1, 4);
-        gridPane.add(listLabel, 0, 5);
-        gridPane.add(tiketListView, 1, 5);
-        gridPane.add(totalHargaLabel, 1, 6);
-        gridPane.add(backButton, 1, 7);
+        gridPane.add(tanggalLabel, 0, 3);
+        gridPane.add(datePicker, 1, 3);
+        gridPane.add(pesanButton, 1, 4);
+        gridPane.add(cetakButton, 1, 5);
+        gridPane.add(listLabel, 0, 6);
+        gridPane.add(tiketListView, 1, 6);
+        gridPane.add(totalHargaLabel, 1, 7);
+        gridPane.add(backButton, 1, 8);
 
         getChildren().addAll(backgroundImageView, gridPane);
         setPrefSize(PREF_WIDTH, PREF_HEIGHT);
+    }
+
+    private String generateBookingID() {
+        return String.format("%08d", (int) (Math.random() * 100000000));
     }
 
     private void initKeretaData() {
         sistemPemesananKereta.tambahKereta(new Kereta("KERETA API ARGO BROMO", "Jakarta", "Surabaya", "08:00", "16:00", 500000, 1000000));
         sistemPemesananKereta.tambahKereta(new Kereta("KERETA API GAJAYANA", "Jakarta", "Malang", "09:00", "17:00", 550000, 1100000));
         sistemPemesananKereta.tambahKereta(new Kereta("KERETA API TEGAL BAHARI", "Jakarta", "Tegal", "10:00", "14:00", 300000, 600000));
-        selectionPaneWidth = 500;
-        selectionPaneHeight = 700;
+        selectionPaneWidth = 512;
+        selectionPaneHeight = 512;
     }
 
     private void pesanTiket() {
         int indeksKereta = keretaComboBox.getSelectionModel().getSelectedIndex();
         String namaPenumpang = namaField.getText();
         String tipeKelas = kelasComboBox.getSelectionModel().getSelectedItem();
+        LocalDate tanggalKeberangkatan = datePicker.getValue();
 
-        if (namaPenumpang.isEmpty()) {
-            showErrorMessage("Nama penumpang tidak boleh kosong.");
+        if (namaPenumpang.isEmpty() || tanggalKeberangkatan == null) {
+            showErrorMessage("Nama penumpang dan tanggal keberangkatan harus diisi.");
             return;
         }
-        sistemPemesananKereta.pesanTiket(indeksKereta, namaPenumpang, tipeKelas);
+
+        String bookingID = generateBookingID();
+        sistemPemesananKereta.pesanTiket(indeksKereta, namaPenumpang, tipeKelas, tanggalKeberangkatan, bookingID);
         updateTiketListView();
     }
+
+
 
     private void updateTiketListView() {
         tiketListView.getItems().clear();
@@ -143,6 +190,7 @@ public class KeretaPane extends StackPane {
 
     private void cetakTiket() {
         String selectedTiket = tiketListView.getSelectionModel().getSelectedItem();
+        LocalDate selectedDate = datePicker.getValue();
         if (selectedTiket != null) {
             PrinterJob printerJob = PrinterJob.getPrinterJob();
             printerJob.setPrintable((graphics, pageFormat, pageIndex) -> {
@@ -153,76 +201,71 @@ public class KeretaPane extends StackPane {
                 Graphics2D g2d = (Graphics2D) graphics;
                 g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
 
-                int x = 50;
-                int y = 50;
-                int cellHeight = 25;
-                int labelWidth = 150;
-                int valueWidth = 200;
-                int tiketWidth = labelWidth + valueWidth + 20;
-                int columnGap = 10;
-                int totalHeight = 10 * cellHeight;
+                try {
+                    Image backgroundImage = new Image(Objects.requireNonNull(getClass().getResource("/images/tiket_train_background.jpg")).toExternalForm());
+                    BufferedImage bufferedImage = SwingFXUtils.fromFXImage(backgroundImage, null);
+                    g2d.drawImage(bufferedImage, 0, 0, (int) pageFormat.getWidth(), (int) pageFormat.getHeight(), null);
 
-                g2d.setFont(new Font("Arial", Font.BOLD, 12));
-                g2d.setColor(Color.BLACK);
+                    g2d.setFont(new Font("Arial", Font.BOLD, 16));
+                    g2d.setColor(Color.BLACK);
 
-                g2d.setColor(new Color(135, 206, 250));
-                g2d.fillRect(x, y, tiketWidth, totalHeight);
-                g2d.setColor(Color.BLACK);
-                g2d.drawRect(x, y, tiketWidth, totalHeight);
-                y += cellHeight;
+                    TiketKereta selectedTicket = sistemPemesananKereta.getTiketKeretaList().stream()
+                            .filter(t -> t.toString().equals(selectedTiket))
+                            .findFirst()
+                            .orElse(null);
 
-                String header = "=== Tiket Bus ===";
-                g2d.setFont(new Font("Arial", Font.BOLD, 14));
-                int headerWidth = g2d.getFontMetrics().stringWidth(header);
-                g2d.drawString(header, x + (tiketWidth - headerWidth) / 2, y - 5);
+                    if (selectedTicket != null) {
+                        int y = 150; // Starting Y position (more down)
+                        int lineHeight = 30; // Height of each line (larger text)
+                        int leftMargin = 50;
 
-                y += cellHeight;
-                g2d.drawLine(x, y, x + tiketWidth, y);
-                y += cellHeight / 2;
-                g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+                        String[] headerInfo = {
+                                "E-ticket",
+                                "Return Ticket",
+                                "",
+                                selectedTicket.kereta().namaKereta(),
+                                selectedDate.getDayOfWeek()+","+selectedDate.toString(),
+                                "",
+                                "Booking ID: "+ generateBookingID(),
+                        };
 
-                TiketKereta selectedTicket = sistemPemesananKereta.getTiketKeretaList().stream()
-                        .filter(t -> t.toString().equals(selectedTiket))
-                        .findFirst()
-                        .orElse(null);
+                        for (String line : headerInfo) {
+                            g2d.drawString(line, leftMargin, y);
+                            y += lineHeight;
+                        }
 
-                if (selectedTicket != null) {
-                    int labelX = x + 10;
-                    int valueX = labelX + labelWidth + columnGap;
+                        y += lineHeight;
 
-                    String[] labels = {"Nama Bus", "Nama Penumpang", "Asal", "Tujuan", "Berangkat", "Tiba", "Kelas", "Harga"};
-                    String[] values = {
-                            selectedTicket.kereta().namaKereta(),
-                            selectedTicket.namaPenumpang(),
-                            selectedTicket.kereta().asal(),
-                            selectedTicket.kereta().tujuan(),
-                            selectedTicket.kereta().waktuBerangkat(),
-                            selectedTicket.kereta().waktuTiba(),
-                            selectedTicket.tipeKelas(),
-                            "Rp" + selectedTicket.harga()
-                    };
+                        String[] ticketInfo = {
+                                "Kereta: " + selectedTicket.kereta().namaKereta(),
+                                "Asal: " + selectedTicket.kereta().asal(),
+                                "Tujuan: " + selectedTicket.kereta().tujuan(),
+                                "Berangkat: " + selectedTicket.kereta().waktuBerangkat(),
+                                "Tiba: " + selectedTicket.kereta().waktuTiba(),
+                                "Penumpang: " + selectedTicket.namaPenumpang(),
+                                "Kelas: " + selectedTicket.tipeKelas(),
+                                "Harga: Rp" + selectedTicket.harga(),
+                        };
 
-                    for (int i = 0; i < labels.length; i++) {
-                        g2d.setColor(new Color(131, 170, 126));
-                        int y1 = y + (i * cellHeight) - cellHeight / 2;
-                        g2d.fillRect(x, y1, tiketWidth, cellHeight);
-                        g2d.setFont(new Font("Arial", Font.BOLD, 12));
-                        g2d.setColor(Color.BLACK);
-                        g2d.drawString(labels[i], labelX, y + (i * cellHeight));
-                        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-                        g2d.setColor(Color.BLACK);
-                        g2d.drawString(values[i], valueX, y + (i * cellHeight));
-
-                        g2d.drawLine(x, y1, x + tiketWidth, y1);
-                        g2d.drawLine(labelX - 10, y1, labelX - 10, y + (i * cellHeight) + cellHeight / 2);
-                        g2d.drawLine(valueX - columnGap, y1, valueX - columnGap, y + (i * cellHeight) + cellHeight / 2);
+                        for (String line : ticketInfo) {
+                            g2d.drawString(line, leftMargin, y);
+                            y += lineHeight;
+                        }
+                    } else {
+                        showErrorMessage("Tiket tidak ditemukan.");
+                        return Printable.NO_SUCH_PAGE;
                     }
-                    int y2 = y + (labels.length * cellHeight) - cellHeight / 2;
-                    g2d.drawLine(x, y2, x + tiketWidth, y2);
+
+                } catch (Exception e) {
+                    showErrorMessage("Gagal memuat gambar: " + e.getMessage());
+                    return Printable.NO_SUCH_PAGE;
                 }
 
                 return Printable.PAGE_EXISTS;
             });
+            PrintRequestAttributeSet attrs = new HashPrintRequestAttributeSet();
+            attrs.add(new MediaPrintableArea(0, 0, 72, 72, MediaPrintableArea.INCH));
+            printerJob.setJobName("Cetak Tiket");
 
             boolean doPrint = printerJob.printDialog();
             if (doPrint) {
@@ -246,22 +289,28 @@ public class KeretaPane extends StackPane {
     }
 }
 
-    record Kereta(String namaKereta, String asal, String tujuan, String waktuBerangkat, String waktuTiba,
-                  int hargaEkonomi, int hargaBisnis) {
+record Kereta(String namaKereta, String asal, String tujuan, String waktuBerangkat, String waktuTiba,
+              int hargaEkonomi, int hargaBisnis) {
 
-        @Override
-        public String toString() {
-            return namaKereta + " dari " + asal + " ke " + tujuan + " | Berangkat: " + waktuBerangkat + " | Tiba: " + waktuTiba;
-        }
+    @Override
+    public String toString() {
+        return namaKereta + " dari " + asal + " ke " + tujuan + " | Berangkat: " + waktuBerangkat + " | Tiba: " + waktuTiba;
     }
+}
 
-    record TiketKereta(Kereta kereta, String namaPenumpang, String tipeKelas, int harga) {
+record TiketKereta(Kereta kereta, String namaPenumpang, String tipeKelas, int harga,
+                   LocalDate tanggalKeberangkatan, String bookingID) {
 
-        @Override
-        public String toString() {
-            return "Tiket untuk: " + namaPenumpang + " pada " + kereta.namaKereta() + " | Kelas: " + tipeKelas + " | Harga: Rp" + harga;
-        }
+    @Override
+    public String toString() {
+        return "Tiket untuk: " + namaPenumpang + " pada " + kereta.namaKereta() +
+                " | Tanggal Keberangkatan: " + tanggalKeberangkatan.toString() +
+                " | Kelas: " + tipeKelas + " | Harga: Rp" + harga +
+                " | Booking ID: " + bookingID;
     }
+}
+
+
 class SistemPemesananKereta {
     private final ArrayList<Kereta> keretaList;
     private final ArrayList<TiketKereta> tiketKeretaList;
@@ -283,11 +332,11 @@ class SistemPemesananKereta {
         return tiketKeretaList;
     }
 
-    public void pesanTiket(int indeksKereta, String namaPenumpang, String tipeKelas) {
+    public void pesanTiket(int indeksKereta, String namaPenumpang, String tipeKelas, LocalDate tanggalKeberangkatan, String bookingID) {
         if (indeksKereta >= 0 && indeksKereta < keretaList.size()) {
             Kereta kereta = keretaList.get(indeksKereta);
             int harga = tipeKelas.equalsIgnoreCase("Ekonomi") ? kereta.hargaEkonomi() : kereta.hargaBisnis();
-            TiketKereta tiketKereta = new TiketKereta(kereta, namaPenumpang, tipeKelas, harga);
+            TiketKereta tiketKereta = new TiketKereta(kereta, namaPenumpang, tipeKelas, harga, tanggalKeberangkatan, bookingID);
             tiketKeretaList.add(tiketKereta);
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -303,4 +352,5 @@ class SistemPemesananKereta {
             alert.showAndWait();
         }
     }
+
 }
