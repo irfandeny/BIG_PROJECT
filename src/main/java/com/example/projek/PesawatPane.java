@@ -133,7 +133,7 @@ public class PesawatPane extends StackPane {
         gridPane.add(namaField, 1, 1);
         gridPane.add(kelasLabel, 0, 2);
         gridPane.add(kelasComboBox, 1, 2);
-        gridPane.add(datePicker, 1, 3); // Adding DatePicker to the gridPane
+        gridPane.add(datePicker, 1, 3);
         gridPane.add(pesanButton, 1, 4);
         gridPane.add(cetakButton, 1, 5);
         gridPane.add(listLabel, 0, 6);
@@ -187,7 +187,7 @@ public class PesawatPane extends StackPane {
 
     private void cetakTiket() {
         String selectedTiket = tiketListView.getSelectionModel().getSelectedItem();
-        java.time.LocalDate selectedDate = datePicker.getValue(); // Get selected date from DatePicker
+        java.time.LocalDate selectedDate = datePicker.getValue();
 
         if (selectedTiket != null) {
             PrinterJob printerJob = PrinterJob.getPrinterJob();
@@ -232,7 +232,7 @@ public class PesawatPane extends StackPane {
                             y += lineHeight;
                         }
 
-                        y += lineHeight; // Extra space
+                        y += lineHeight;
 
                         String[] ticketInfo = {
                                 "Pesawat: " + selectedTicket.penerbangan().namaPenerbangan(),

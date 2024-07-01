@@ -215,8 +215,8 @@ public class KeretaPane extends StackPane {
                             .orElse(null);
 
                     if (selectedTicket != null) {
-                        int y = 150; // Starting Y position (more down)
-                        int lineHeight = 30; // Height of each line (larger text)
+                        int y = 150;
+                        int lineHeight = 30;
                         int leftMargin = 50;
 
                         String[] headerInfo = {

@@ -130,7 +130,7 @@ public class BusPane extends StackPane {
         gridPane.add(namaField, 1, 1);
         gridPane.add(kelasLabel, 0, 2);
         gridPane.add(kelasComboBox, 1, 2);
-        gridPane.add(datePicker, 1, 3); // Add DatePicker to the grid
+        gridPane.add(datePicker, 1, 3);
         gridPane.add(pesanButton, 1, 4);
         gridPane.add(cetakButton, 1, 5);
         gridPane.add(listLabel, 0, 6);
@@ -206,8 +206,8 @@ public class BusPane extends StackPane {
                             .orElse(null);
 
                     if (selectedTicket != null) {
-                        int y = 150; // Starting Y position (more down)
-                        int lineHeight = 30; // Height of each line (larger text)
+                        int y = 150;
+                        int lineHeight = 30;
                         int leftMargin = 50;
 
                         String[] headerInfo = {
@@ -215,7 +215,7 @@ public class BusPane extends StackPane {
                                 "Return Ticket",
                                 "",
                                 selectedTicket.bus().namaBus(),
-                                selectedDate.getDayOfWeek()+","+selectedDate.toString(), // Format date
+                                selectedDate.getDayOfWeek()+","+selectedDate.toString(),
                                 "",
                                 "Booking ID: "+generateBookingID(),
                         };
