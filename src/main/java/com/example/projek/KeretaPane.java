@@ -31,6 +31,7 @@ public class KeretaPane extends StackPane {
     private final ComboBox<String> keretaComboBox;
     private final TextField namaField;
     private final ComboBox<String> kelasComboBox;
+    private ComboBox<String> comboSeat;
     private final ListView<String> tiketListView;
     private final Label totalHargaLabel;
     private final SistemPemesananKereta sistemPemesananKereta;
@@ -69,10 +70,17 @@ public class KeretaPane extends StackPane {
         namaField = new TextField();
         namaField.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5; -fx-font-weight: bold;");
 
+        Label seat = new Label("Pilih Kursi");
+        seat.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
+        comboSeat = new ComboBox<>();
+        comboSeat.getItems().addAll("A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3");
+        comboSeat.getSelectionModel().selectFirst();
+        comboSeat.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5; -fx-font-weight: bold;");
+
         Label kelasLabel = new Label("Pilih Kelas:");
         kelasLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
         kelasComboBox = new ComboBox<>();
-        kelasComboBox.getItems().addAll("Ekonomi", "Bisnis");
+        kelasComboBox.getItems().addAll("Ekonomi", "Bisnis", "Eksekutif");
         kelasComboBox.getSelectionModel().selectFirst();
         kelasComboBox.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5; -fx-font-weight: bold;");
 
@@ -118,6 +126,9 @@ public class KeretaPane extends StackPane {
 
         totalHargaLabel = new Label("Total Harga: Rp0");
         totalHargaLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #B22222;");
+        
+        Label kembalianLabel = new Label();
+        kembalianLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #B22222;");
 
         Button backButton = new Button("Back");
         backButton.setStyle("-fx-background-color: #DC143C; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 10;");
@@ -135,14 +146,17 @@ public class KeretaPane extends StackPane {
         gridPane.add(namaField, 1, 1);
         gridPane.add(kelasLabel, 0, 2);
         gridPane.add(kelasComboBox, 1, 2);
-        gridPane.add(tanggalLabel, 0, 3);
-        gridPane.add(datePicker, 1, 3);
-        gridPane.add(pesanButton, 1, 4);
-        gridPane.add(cetakButton, 1, 5);
-        gridPane.add(listLabel, 0, 6);
-        gridPane.add(tiketListView, 1, 6);
-        gridPane.add(totalHargaLabel, 1, 7);
-        gridPane.add(backButton, 1, 8);
+        gridPane.add(seat, 0,3);
+        gridPane.add(comboSeat, 1,3);
+        gridPane.add(tanggalLabel, 0, 4);
+        gridPane.add(datePicker, 1, 4);
+        gridPane.add(pesanButton, 1, 5);
+        gridPane.add(cetakButton, 1, 6);
+        gridPane.add(listLabel, 0, 7);
+        gridPane.add(tiketListView, 1, 7);
+        gridPane.add(totalHargaLabel, 1, 8);
+        gridPane.add(backButton, 1, 9);
+        gridPane.add(kembalianLabel,1,12);
 
         getChildren().addAll(backgroundImageView, gridPane);
         setPrefSize(PREF_WIDTH, PREF_HEIGHT);
@@ -164,6 +178,7 @@ public class KeretaPane extends StackPane {
         int indeksKereta = keretaComboBox.getSelectionModel().getSelectedIndex();
         String namaPenumpang = namaField.getText();
         String tipeKelas = kelasComboBox.getSelectionModel().getSelectedItem();
+        String kursi = comboSeat.getSelectionModel().getSelectedItem();
         LocalDate tanggalKeberangkatan = datePicker.getValue();
 
         if (namaPenumpang.isEmpty() || tanggalKeberangkatan == null) {
@@ -172,11 +187,9 @@ public class KeretaPane extends StackPane {
         }
 
         String bookingID = generateBookingID();
-        sistemPemesananKereta.pesanTiket(indeksKereta, namaPenumpang, tipeKelas, tanggalKeberangkatan, bookingID);
+        sistemPemesananKereta.pesanTiket(indeksKereta, namaPenumpang, tipeKelas, tanggalKeberangkatan, bookingID, kursi);
         updateTiketListView();
     }
-
-
 
     private void updateTiketListView() {
         tiketListView.getItems().clear();
@@ -192,6 +205,24 @@ public class KeretaPane extends StackPane {
         String selectedTiket = tiketListView.getSelectionModel().getSelectedItem();
         LocalDate selectedDate = datePicker.getValue();
         if (selectedTiket != null) {
+            double totalHarga = sistemPemesananKereta.hitungTotalHarga();
+
+            TextInputDialog paymentDialog = new TextInputDialog();
+            paymentDialog.setTitle("Pembayaran");
+            paymentDialog.setHeaderText("Total Harga: Rp" + totalHarga);
+            paymentDialog.setContentText("Masukkan jumlah pembayaran:");
+
+            double paymentAmount = Double.parseDouble(paymentDialog.showAndWait().orElse("0"));
+
+            if (paymentAmount < totalHarga) {
+                showErrorMessage("Jumlah pembayaran kurang.");
+                return;
+            }
+
+            double change = paymentAmount - totalHarga;
+            showInfoMessage("Pembayaran berhasil. Kembalian: Rp" + change);
+
+
             PrinterJob printerJob = PrinterJob.getPrinterJob();
             printerJob.setPrintable((graphics, pageFormat, pageIndex) -> {
                 if (pageIndex > 0) {
@@ -226,7 +257,7 @@ public class KeretaPane extends StackPane {
                                 selectedTicket.kereta().namaKereta(),
                                 selectedDate.getDayOfWeek()+","+selectedDate.toString(),
                                 "",
-                                "Booking ID: "+ generateBookingID(),
+                                "Booking ID:%s%s".formatted(comboSeat.getSelectionModel().getSelectedItem(), selectedTicket.bookingID()),
                         };
 
                         for (String line : headerInfo) {
@@ -260,6 +291,9 @@ public class KeretaPane extends StackPane {
                     showErrorMessage("Gagal memuat gambar: " + e.getMessage());
                     return Printable.NO_SUCH_PAGE;
                 }
+                g2d.setFont(new Font("Arial", Font.PLAIN, 10));
+                g2d.setColor(Color.black);
+                g2d.drawString("© Tiketku", (int) pageFormat.getWidth() - 100, (int) pageFormat.getHeight() - 10);
 
                 return Printable.PAGE_EXISTS;
             });
@@ -287,6 +321,13 @@ public class KeretaPane extends StackPane {
         alert.setContentText(message);
         alert.showAndWait();
     }
+    private void showInfoMessage(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Info");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 }
 
 record Kereta(String namaKereta, String asal, String tujuan, String waktuBerangkat, String waktuTiba,
@@ -296,17 +337,32 @@ record Kereta(String namaKereta, String asal, String tujuan, String waktuBerangk
     public String toString() {
         return namaKereta + " dari " + asal + " ke " + tujuan + " | Berangkat: " + waktuBerangkat + " | Tiba: " + waktuTiba;
     }
+    public double getHargaEkonomi() {
+        return hargaEkonomi;
+    }
+
+    public double getHargaBisnis() {
+        return hargaBisnis;
+    }
 }
 
-record TiketKereta(Kereta kereta, String namaPenumpang, String tipeKelas, int harga,
-                   LocalDate tanggalKeberangkatan, String bookingID) {
+record TiketKereta(Kereta kereta, String namaPenumpang, String tipeKelas, int harga, LocalDate tanggalKeberangkatan, String bookingID, String kursi) {
 
     @Override
     public String toString() {
         return "Tiket untuk: " + namaPenumpang + " pada " + kereta.namaKereta() +
                 " | Tanggal Keberangkatan: " + tanggalKeberangkatan.toString() +
                 " | Kelas: " + tipeKelas + " | Harga: Rp" + harga +
-                " | Booking ID: " + bookingID;
+                " | Booking ID: " +kursi + bookingID;
+    }
+    public double getHarga() {
+        if (tipeKelas.equals("Ekonomi")) {
+            return kereta.getHargaEkonomi();
+        } else if (tipeKelas.equals("Bisnis")) {
+            return kereta.getHargaBisnis();
+        } else {
+            return 0;
+        }
     }
 }
 
@@ -331,12 +387,19 @@ class SistemPemesananKereta {
     public ArrayList<TiketKereta> getTiketKeretaList() {
         return tiketKeretaList;
     }
+    public double hitungTotalHarga() {
+        double totalHarga = 0;
+        for (TiketKereta tiket : tiketKeretaList) {
+            totalHarga += tiket.getHarga();
+        }
+        return totalHarga;
+    }
 
-    public void pesanTiket(int indeksKereta, String namaPenumpang, String tipeKelas, LocalDate tanggalKeberangkatan, String bookingID) {
+    public void pesanTiket(int indeksKereta, String namaPenumpang, String tipeKelas, LocalDate tanggalKeberangkatan, String bookingID, String kursi) {
         if (indeksKereta >= 0 && indeksKereta < keretaList.size()) {
             Kereta kereta = keretaList.get(indeksKereta);
             int harga = tipeKelas.equalsIgnoreCase("Ekonomi") ? kereta.hargaEkonomi() : kereta.hargaBisnis();
-            TiketKereta tiketKereta = new TiketKereta(kereta, namaPenumpang, tipeKelas, harga, tanggalKeberangkatan, bookingID);
+            TiketKereta tiketKereta = new TiketKereta(kereta, namaPenumpang, tipeKelas, harga, tanggalKeberangkatan, bookingID, kursi);
             tiketKeretaList.add(tiketKereta);
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
