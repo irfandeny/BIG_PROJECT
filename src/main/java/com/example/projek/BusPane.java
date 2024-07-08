@@ -29,7 +29,6 @@ public class BusPane extends StackPane {
     private final ComboBox<String> busComboBox;
     private final TextField namaField;
     private final ComboBox<String> kelasComboBox;
-    private final ComboBox<String> comboSeat;
     private final ListView<String> tiketListView;
     private final Label totalHargaLabel;
     private final SistemPemesananBus sistemPemesananBus;
@@ -67,13 +66,6 @@ public class BusPane extends StackPane {
         namaLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #F0FFFF; -fx-font-weight: bold;");
         namaField = new TextField();
         namaField.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5; -fx-font-weight: bold;");
-
-        Label seat = new Label("Pilih Kursi");
-        seat.setStyle("-fx-font-size: 14px; -fx-text-fill: #333; -fx-font-weight: bold;");
-        comboSeat = new ComboBox<>();
-        comboSeat.getItems().addAll("A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3");
-        comboSeat.getSelectionModel().selectFirst();
-        comboSeat.setStyle("-fx-background-color: #ffffff; -fx-border-color: #ccc; -fx-padding: 5; -fx-font-weight: bold;");
 
         Label kelasLabel = new Label("Pilih Kelas:");
         kelasLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #F0FFFF; -fx-font-weight: bold;");
@@ -141,8 +133,6 @@ public class BusPane extends StackPane {
         gridPane.add(namaField, 1, 1);
         gridPane.add(kelasLabel, 0, 2);
         gridPane.add(kelasComboBox, 1, 2);
-        gridPane.add(seat, 0,3);
-        gridPane.add(comboSeat, 1,3);
         gridPane.add(tanggalLabel, 0, 4);
         gridPane.add(datePicker, 1, 4);
         gridPane.add(pesanButton, 1, 5);
@@ -171,7 +161,6 @@ public class BusPane extends StackPane {
         int indeksBus = busComboBox.getSelectionModel().getSelectedIndex();
         String namaPenumpang = namaField.getText();
         String kelas = kelasComboBox.getSelectionModel().getSelectedItem();
-        String kursi = comboSeat.getSelectionModel().getSelectedItem();
         LocalDate tanggalKeberangkatan = datePicker.getValue();
 
         if (namaPenumpang.isEmpty() || tanggalKeberangkatan == null) {
@@ -179,7 +168,7 @@ public class BusPane extends StackPane {
             return;
         }
         String bookingID = generateBookingID();
-        sistemPemesananBus.pesanTiket(indeksBus, namaPenumpang, kelas, tanggalKeberangkatan, bookingID, kursi);
+        sistemPemesananBus.pesanTiket(indeksBus, namaPenumpang, kelas, tanggalKeberangkatan, bookingID);
         updateTiketListView();
     }
 
@@ -198,22 +187,6 @@ public class BusPane extends StackPane {
         LocalDate selectedDate = datePicker.getValue();
 
         if (selectedTiket != null && selectedDate != null) {
-
-                double totalHarga = sistemPemesananBus.hitungTotalHarga();
-
-                TextInputDialog paymentDialog = new TextInputDialog();
-                paymentDialog.setTitle("Pembayaran");
-                paymentDialog.setHeaderText("Total Harga: Rp" + totalHarga);
-                paymentDialog.setContentText("Masukkan jumlah pembayaran:");
-
-                double paymentAmount = Double.parseDouble(paymentDialog.showAndWait().orElse("0"));
-
-                if (paymentAmount < totalHarga) {
-                    showErrorMessage("Jumlah pembayaran kurang.");
-                    return;
-                }
-                double change = paymentAmount - totalHarga;
-                showInfoMessage("Pembayaran berhasil. Kembalian: Rp" + change);
 
             PrinterJob printerJob = PrinterJob.getPrinterJob();
             printerJob.setPrintable((graphics, pageFormat, pageIndex) -> {
@@ -250,7 +223,7 @@ public class BusPane extends StackPane {
                                 selectedTicket.bus().namaBus(),
                                 selectedDate.getDayOfWeek()+","+selectedDate.toString(),
                                 "",
-                                "Booking ID : %s%s".formatted(comboSeat.getSelectionModel().getSelectedItem(), selectedTicket.bookingID()),
+                                "Booking ID : %s".formatted(selectedTicket.bookingID()),
 
                         };
 
@@ -285,11 +258,6 @@ public class BusPane extends StackPane {
                     showErrorMessage("Gagal memuat gambar: " + e.getMessage());
                     return Printable.NO_SUCH_PAGE;
                 }
-
-                g2d.setFont(new Font("Arial", Font.PLAIN, 10));
-                g2d.setColor(Color.black);
-                g2d.drawString("© Tiketku", (int) pageFormat.getWidth() - 100, (int) pageFormat.getHeight() - 10);
-
                 return Printable.PAGE_EXISTS;
             });
 
@@ -317,13 +285,6 @@ public class BusPane extends StackPane {
         alert.setContentText(message);
         alert.showAndWait();
     }
-    private void showInfoMessage(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Info");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
 }
 
 record Bus(String namaBus, String asal, String tujuan, String waktuBerangkat, String waktuTiba, int hargaEkonomi, int hargaBisnis) {
@@ -332,31 +293,15 @@ record Bus(String namaBus, String asal, String tujuan, String waktuBerangkat, St
     public String toString() {
         return namaBus + " dari " + asal + " ke " + tujuan + " | Berangkat: " + waktuBerangkat + " | Tiba: " + waktuTiba;
     }
-    public double getHargaEkonomi() {
-        return hargaEkonomi;
-    }
-
-    public double getHargaBisnis() {
-        return hargaBisnis;
-    }
 }
 
-record TiketBus(Bus bus, String namaPenumpang, String tipeKelas, int harga, LocalDate tanggalKeberangkatan, String bookingID, String kursi) {
+record TiketBus(Bus bus, String namaPenumpang, String tipeKelas, int harga, LocalDate tanggalKeberangkatan, String bookingID) {
 
     @Override
     public String toString() {
         return "Bus: " + bus.namaBus() + ", Nama: " + namaPenumpang + "| Kelas: " + tipeKelas + "| Tanggal Keberangkatan: "+tanggalKeberangkatan+
-                "| Booking ID: "+kursi+bookingID+
+                "| Booking ID: "+bookingID+
                 ", Harga: Rp" + harga;
-    }
-    public double getHarga() {
-        if (tipeKelas.equals("Ekonomi")) {
-            return bus.getHargaEkonomi();
-        } else if (tipeKelas.equals("Bisnis")) {
-            return bus.getHargaBisnis();
-        } else {
-            return 0;
-        }
     }
 }
 
@@ -380,19 +325,12 @@ class SistemPemesananBus {
     public ArrayList<TiketBus> getTiketBusList() {
         return tiketBusList;
     }
-    public double hitungTotalHarga() {
-        double totalHarga = 0;
-        for (TiketBus tiket : tiketBusList) {
-            totalHarga += tiket.getHarga();
-        }
-        return totalHarga;
-    }
 
-    public void pesanTiket(int indeksBus, String namaPenumpang, String tipeKelas, LocalDate tanggalKeberangkatan, String bookingID, String kursi) {
+    public void pesanTiket(int indeksBus, String namaPenumpang, String tipeKelas, LocalDate tanggalKeberangkatan, String bookingID) {
         if (indeksBus >= 0 && indeksBus < busList.size()) {
             Bus bus = busList.get(indeksBus);
             int harga = tipeKelas.equalsIgnoreCase("Ekonomi") ? bus.hargaEkonomi() : bus.hargaBisnis();
-            TiketBus tiketBus = new TiketBus(bus, namaPenumpang, tipeKelas, harga, tanggalKeberangkatan, bookingID, kursi);
+            TiketBus tiketBus = new TiketBus(bus, namaPenumpang, tipeKelas, harga, tanggalKeberangkatan, bookingID);
             tiketBusList.add(tiketBus);
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
